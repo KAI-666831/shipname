@@ -1,0 +1,300 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>船名分析</title>
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="icon-180.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="船名分析">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="theme-color" content="#0b1620">
+<style>
+:root{--bg:#0b1620;--card:#132433;--line:#22394d;--tx:#e6eef5;--mut:#8aa1b5;--acc:#f28c28;--ok:#3fbf7f;--chip:#1b3044}
+body.night{--bg:#000;--card:#120000;--line:#3a0000;--tx:#ff4a3a;--mut:#a52a20;--acc:#ff3b2b;--ok:#ff6a50;--chip:#1e0000}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+body{margin:0;background:var(--bg);color:var(--tx);font:16px/1.45 -apple-system,"PingFang TC","Noto Sans TC",sans-serif;
+ padding:env(safe-area-inset-top) 0 env(safe-area-inset-bottom)}
+header{display:flex;align-items:center;gap:8px;padding:12px 14px 6px}
+header h1{font-size:20px;margin:0;flex:1}
+.pill{font-size:12px;padding:3px 8px;border-radius:99px;border:1px solid var(--line);color:var(--mut)}
+.pill.on{color:var(--ok);border-color:var(--ok)}
+button{font:inherit;color:var(--tx);background:var(--chip);border:1px solid var(--line);border-radius:10px;padding:8px 12px;white-space:nowrap;flex-shrink:0}
+button.pri{background:var(--acc);border-color:var(--acc);color:#111;font-weight:600}
+body.night button.pri{color:#000}
+main{padding:0 14px 40px;max-width:720px;margin:0 auto}
+.card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:12px;margin:10px 0}
+input,textarea{font:inherit;width:100%;background:var(--bg);color:var(--tx);border:1px solid var(--line);border-radius:10px;padding:10px}
+#q{font-size:20px;text-transform:uppercase;letter-spacing:.5px}
+.row{display:flex;gap:8px;align-items:center}
+.ex{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
+.ex button{font-size:13px;padding:4px 9px}
+#result{font-size:34px;font-weight:700;letter-spacing:2px;min-height:44px;word-break:break-all}
+.known{color:var(--ok);font-size:14px;margin-bottom:4px}
+.syl{border-top:1px solid var(--line);padding:10px 0}
+.syl:first-child{border-top:0}
+.sh{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:6px}
+.sh b{font-size:17px;letter-spacing:1px}
+.sh span{font-size:12px;color:var(--mut)}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.c{min-width:58px;padding:6px 8px;border-radius:10px;background:var(--chip);border:1px solid var(--line);text-align:center;line-height:1.15}
+.c .z{font-size:24px}
+.c .p{font-size:11px;color:var(--mut)}
+.c.sel{border-color:var(--acc);box-shadow:0 0 0 2px var(--acc) inset}
+.c.tone .p{color:var(--ok)}
+.c.tone::after{content:"聲調✓";display:block;font-size:10px;color:var(--ok)}
+.own{width:64px;font-size:20px;text-align:center;padding:6px}
+.muted{color:var(--mut);font-size:13px}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.grid label{font-size:12px;color:var(--mut)}
+.book-item{border-top:1px solid var(--line);padding:9px 0;display:flex;gap:10px;align-items:center}
+.book-item:first-child{border-top:0}
+.book-item .zh{font-size:22px;font-weight:700;min-width:5em}
+.book-item .en{font-size:13px;color:var(--mut)}
+.book-item .x{margin-left:auto;padding:4px 9px;font-size:13px}
+details summary{cursor:pointer;color:var(--mut);font-size:14px}
+.toast{position:fixed;left:50%;bottom:calc(24px + env(safe-area-inset-bottom));transform:translateX(-50%);background:var(--acc);color:#111;padding:8px 14px;border-radius:99px;font-size:14px;opacity:0;transition:.25s;pointer-events:none}
+.toast.show{opacity:1}
+table{border-collapse:collapse;font-size:13px;width:100%}
+td{border-top:1px solid var(--line);padding:4px 6px}
+</style>
+</head>
+<body>
+<header>
+  <h1>船名分析</h1>
+  <span id="net" class="pill">檢查中</span>
+  <button id="nightBtn" title="夜間紅光">🌙</button>
+</header>
+<main>
+  <div class="card">
+    <div class="row">
+      <input id="q" placeholder="輸入 AIS 英文船名" autocomplete="off" autocapitalize="characters" spellcheck="false">
+      <button id="clr">清除</button>
+    </div>
+    <div class="ex" id="ex"></div>
+  </div>
+
+  <div class="card">
+    <div id="known" class="known"></div>
+    <div class="row" style="justify-content:space-between">
+      <div id="result"></div>
+      <button id="copy">複製</button>
+    </div>
+    <div class="muted" id="hint">點下面的字可以換；有「聲調✓」的是國語羅馬字拼法連聲調都對上，最可能。</div>
+  </div>
+
+  <div class="card" id="syls"></div>
+
+  <div class="card">
+    <b>存到船名簿</b>
+    <div class="muted" style="margin:4px 0 8px">確認過的船名存起來，下次輸入同一個英文名就直接顯示。</div>
+    <div class="grid">
+      <div><label>中文船名</label><input id="fZh"></div>
+      <div><label>英文船名</label><input id="fEn"></div>
+      <div><label>呼號</label><input id="fCs" autocapitalize="characters"></div>
+      <div><label>MMSI</label><input id="fMmsi" inputmode="numeric"></div>
+    </div>
+    <div style="margin-top:8px"><label class="muted">備註</label><input id="fNote" placeholder="例：船籍港、作業類型、確認方式"></div>
+    <div class="row" style="margin-top:10px"><button class="pri" id="save">儲存</button><span class="muted" id="saveMsg"></span></div>
+  </div>
+
+  <div class="card">
+    <div class="row" style="justify-content:space-between">
+      <b>船名簿 <span id="bookN" class="muted"></span></b>
+      <div class="row"><button id="exp">匯出</button><button id="imp">匯入</button></div>
+    </div>
+    <input id="bq" placeholder="搜尋中文、英文、呼號、MMSI" style="margin-top:8px">
+    <div id="book"></div>
+    <input type="file" id="impFile" accept=".json,application/json" hidden>
+  </div>
+
+  <div class="card">
+    <details>
+      <summary>拼法說明</summary>
+      <p class="muted">台灣漁船英文名大多用<b>國語羅馬字</b>（例：CHARNG、SHUENN、HORNG），它用字母表示聲調：</p>
+      <table>
+        <tr><td>一聲</td><td>原形</td><td>SHIN 新、FA 發、CHANG 昌</td></tr>
+        <tr><td>二聲</td><td>加 r，或 i→y、u→w</td><td>CHARNG 長、HORNG 鴻、FWU 福、SHYANG 祥</td></tr>
+        <tr><td>三聲</td><td>母音重複，或 i→e、u→o</td><td>MAAN 滿、HAE 海、YEONG 永、JEOU 九</td></tr>
+        <tr><td>四聲</td><td>結尾 -h、-nn、-nq、-y、-w</td><td>YIH 益、SHUENN 順、SHENQ 盛、MAW 茂</td></tr>
+      </table>
+      <p class="muted">也有用威妥瑪（HSIN、HSIANG）、通用拼音（SIN）或漢語拼音（XIN）。不少船名不標聲調（例：盛 寫成 SHENG），所以結果只是推測，最後還是以船身船名或漁業署登記為準。</p>
+      <p class="muted">字庫收錄約 460 個漁船常用字；沒有的字可以在每列最後的框自己輸入。</p>
+    </details>
+  </div>
+</main>
+<div class="toast" id="toast"></div>
+
+<script src="dict.js"></script>
+<script>
+const $ = s => document.querySelector(s);
+const KIND = {GR:'國羅',GR0:'國羅(無調)',WG:'威妥瑪',TY:'通用',PY:'漢拼'};
+const EXAMPLES = ['SHIN CHARNG FA','JIN SHUENN FA NO.168','HORNG YEONG SHYANG','FWU YIH MAAN','HSIN HSIANG FA NO.12'];
+let state = {tokens:[], picks:[], num:''};
+
+// ---------- storage (wrapped: iOS private mode can throw) ----------
+const store = {
+  get(k, d){ try{ const v = localStorage.getItem(k); return v ? JSON.parse(v) : d; }catch(e){ return d; } },
+  set(k, v){ try{ localStorage.setItem(k, JSON.stringify(v)); return true; }catch(e){ return false; } }
+};
+let book = store.get('shipbook', []);
+
+function toast(m){ const t = $('#toast'); t.textContent = m; t.classList.add('show'); clearTimeout(t._h); t._h = setTimeout(()=>t.classList.remove('show'), 1600); }
+
+// ---------- pinyin tone marks ----------
+function mark(py){
+  const m = py.match(/^([a-zv]+)(\d)$/); if(!m) return py;
+  let s = m[1].replace(/v/g,'ü'), t = +m[2]; if(t===5) return s;
+  const M = {a:'āáǎà',o:'ōóǒò',e:'ēéěè',i:'īíǐì',u:'ūúǔù','ü':'ǖǘǚǜ'};
+  let i = s.search(/[ae]/);
+  if(i<0) i = s.indexOf('ou')>=0 ? s.indexOf('o') : (()=>{ let j=-1; for(let k=0;k<s.length;k++) if('iouü'.includes(s[k])) j=k; return j; })();
+  if(i<0) return s;
+  return s.slice(0,i) + M[s[i]][t-1] + s.slice(i+1);
+}
+
+// ---------- parsing ----------
+function normalize(q){ return q.toUpperCase().replace(/[‐-―_]/g,'-').trim(); }
+function segment(word){            // split run-together words into known spellings (fewest pieces)
+  const n = word.length, best = Array(n+1).fill(null); best[0] = [];
+  for(let i=0;i<n;i++){ if(!best[i]) continue;
+    for(let j=i+1;j<=Math.min(n,i+7);j++){ const p = word.slice(i,j);
+      if(DICT[p] && (!best[j] || best[j].length > best[i].length+1)) best[j] = best[i].concat([p]); } }
+  return best[n];
+}
+function parse(q){
+  let s = normalize(q), num = '';
+  const m = s.match(/(?:\bNO\.?\s*|#\s*)(\d+)\s*$/) || s.match(/\s(\d+)\s*$/);
+  if(m){ num = m[1]; s = s.slice(0, m.index).trim(); }
+  const toks = [];
+  s.split(/[\s\-\.]+/).filter(Boolean).forEach(w => {
+    w = w.replace(/[^A-Z]/g,''); if(!w) return;
+    if(DICT[w]) toks.push(w); else { const seg = segment(w); seg ? toks.push(...seg) : toks.push(w); }
+  });
+  return {toks, num};
+}
+
+function cands(tok){
+  const list = (DICT[tok] || []).map(([z,py,k]) => ({z,py,k,tone:k.includes('GR')}));
+  list.sort((a,b) => (b.tone - a.tone));   // keep frequency order within groups
+  return list;
+}
+
+// ---------- render ----------
+function run(){
+  const q = $('#q').value;
+  store.set('lastq', q);
+  const {toks, num} = parse(q);
+  state.tokens = toks; state.num = num;
+  state.picks = toks.map(t => { const c = cands(t); return c.length ? c[0].z : '?'; });
+  renderSyls(); compose();
+}
+function renderSyls(){
+  const box = $('#syls'); box.innerHTML = '';
+  if(!state.tokens.length){ box.innerHTML = '<div class="muted">輸入英文船名後，這裡會列出每個音節可能的字。</div>'; return; }
+  state.tokens.forEach((t, i) => {
+    const c = cands(t), d = document.createElement('div'); d.className = 'syl';
+    const kinds = [...new Set(c.flatMap(x => x.k.map(k => KIND[k])))].join('・');
+    d.innerHTML = `<div class="sh"><b>${t}</b><span>${c.length ? kinds : '字庫沒有這個拼法，請自己輸入'}</span></div><div class="chips"></div>`;
+    const chips = d.querySelector('.chips');
+    c.forEach(x => {
+      const b = document.createElement('button');
+      b.className = 'c' + (x.tone ? ' tone' : '') + (state.picks[i] === x.z ? ' sel' : '');
+      b.innerHTML = `<div class="z">${x.z}</div><div class="p">${mark(x.py)}</div>`;
+      b.onclick = () => { state.picks[i] = x.z; renderSyls(); compose(); };
+      chips.appendChild(b);
+    });
+    const own = document.createElement('input'); own.className = 'own'; own.placeholder = '其他';
+    if(!c.some(x => x.z === state.picks[i]) && state.picks[i] !== '?') own.value = state.picks[i];
+    own.oninput = () => { const v = own.value.trim(); state.picks[i] = v || (c[0] ? c[0].z : '?'); compose();
+      d.querySelectorAll('.c').forEach(e => e.classList.toggle('sel', !v && e.querySelector('.z').textContent === state.picks[i])); };
+    chips.appendChild(own);
+    box.appendChild(d);
+  });
+}
+function composed(){ return state.picks.join('') + (state.num ? state.num + '號' : ''); }
+function enKey(s){ return normalize(s).replace(/[^A-Z0-9]/g,''); }
+function compose(){
+  const zh = state.tokens.length ? composed() : '';
+  $('#result').textContent = zh;
+  const k = enKey($('#q').value);
+  const hit = k && book.find(b => enKey(b.en) === k);
+  $('#known').textContent = hit ? `✓ 船名簿已有：${hit.zh}${hit.cs ? '（' + hit.cs + '）' : ''}` : '';
+  if(hit) $('#result').textContent = hit.zh;
+  $('#fZh').value = hit ? hit.zh : zh;
+  $('#fEn').value = normalize($('#q').value);
+  if(hit){ $('#fCs').value = hit.cs || ''; $('#fMmsi').value = hit.mmsi || ''; $('#fNote').value = hit.note || ''; }
+}
+
+// ---------- book ----------
+function renderBook(){
+  const f = $('#bq').value.trim().toUpperCase(), box = $('#book'); box.innerHTML = '';
+  const list = book.filter(b => !f || [b.zh,b.en,b.cs,b.mmsi,b.note].join(' ').toUpperCase().includes(f));
+  $('#bookN').textContent = `(${book.length})`;
+  if(!list.length){ box.innerHTML = `<div class="muted" style="padding-top:8px">${book.length ? '沒有符合的船' : '還沒有存任何船'}</div>`; return; }
+  list.forEach(b => {
+    const d = document.createElement('div'); d.className = 'book-item';
+    d.innerHTML = `<div class="zh"></div><div><div class="en"></div><div class="en"></div></div><button class="x">刪除</button>`;
+    d.querySelector('.zh').textContent = b.zh;
+    const en = d.querySelectorAll('.en'); en[0].textContent = b.en;
+    en[1].textContent = [b.cs, b.mmsi && 'MMSI ' + b.mmsi, b.note].filter(Boolean).join('・');
+    d.querySelector('.zh').onclick = () => { $('#q').value = b.en; run(); window.scrollTo({top:0, behavior:'smooth'}); };
+    d.querySelector('.x').onclick = () => { if(d.dataset.arm){ book = book.filter(x => x !== b); store.set('shipbook', book); renderBook(); compose(); toast('已刪除'); }
+      else { d.dataset.arm = 1; d.querySelector('.x').textContent = '確定刪除？'; setTimeout(()=>{ delete d.dataset.arm; const x=d.querySelector('.x'); if(x) x.textContent='刪除'; }, 2500); } };
+    box.appendChild(d);
+  });
+}
+$('#save').onclick = () => {
+  const e = {zh:$('#fZh').value.trim(), en:normalize($('#fEn').value), cs:$('#fCs').value.trim().toUpperCase(),
+             mmsi:$('#fMmsi').value.trim(), note:$('#fNote').value.trim(), t:Date.now()};
+  if(!e.zh || !e.en){ toast('中文和英文船名都要填'); return; }
+  const i = book.findIndex(b => enKey(b.en) === enKey(e.en) || (e.mmsi && b.mmsi === e.mmsi));
+  if(i >= 0) book[i] = e; else book.unshift(e);
+  if(!store.set('shipbook', book)){ toast('儲存失敗（手機儲存空間被限制）'); return; }
+  renderBook(); compose(); toast(i >= 0 ? '已更新' : '已存到船名簿');
+};
+$('#exp').onclick = () => {
+  const blob = new Blob([JSON.stringify(book, null, 1)], {type:'application/json'});
+  const a = document.createElement('a'); a.href = URL.createObjectURL(blob);
+  a.download = '船名簿-' + new Date().toISOString().slice(0,10) + '.json'; a.click();
+  setTimeout(() => URL.revokeObjectURL(a.href), 4000);
+};
+$('#imp').onclick = () => $('#impFile').click();
+$('#impFile').onchange = async ev => {
+  const f = ev.target.files[0]; if(!f) return;
+  try{
+    const arr = JSON.parse(await f.text()); if(!Array.isArray(arr)) throw 0;
+    let n = 0;
+    arr.forEach(e => { if(!e || !e.zh || !e.en) return;
+      const i = book.findIndex(b => enKey(b.en) === enKey(e.en)); if(i >= 0) book[i] = e; else book.push(e); n++; });
+    store.set('shipbook', book); renderBook(); compose(); toast(`匯入 ${n} 筆`);
+  }catch(e){ toast('檔案格式不對'); }
+  ev.target.value = '';
+};
+$('#bq').oninput = renderBook;
+
+// ---------- misc ----------
+$('#q').oninput = run;
+$('#clr').onclick = () => { $('#q').value = ''; run(); $('#q').focus(); };
+$('#copy').onclick = async () => { const t = $('#result').textContent; if(!t) return;
+  try{ await navigator.clipboard.writeText(t); toast('已複製 ' + t); }catch(e){ toast('無法複製'); } };
+EXAMPLES.forEach(x => { const b = document.createElement('button'); b.textContent = x; b.onclick = () => { $('#q').value = x; run(); }; $('#ex').appendChild(b); });
+function setNight(on){ document.body.classList.toggle('night', on); store.set('night', on);
+  document.querySelector('meta[name=theme-color]').content = on ? '#000000' : '#0b1620'; }
+$('#nightBtn').onclick = () => setNight(!document.body.classList.contains('night'));
+setNight(store.get('night', false));
+function net(){ const n = $('#net');
+  if(navigator.serviceWorker && navigator.serviceWorker.controller){ n.textContent = '可離線'; n.classList.add('on'); }
+  else { n.textContent = navigator.onLine ? '連線中' : '離線'; n.classList.remove('on'); } }
+if('serviceWorker' in navigator){
+  navigator.serviceWorker.register('sw.js').then(() => navigator.serviceWorker.ready).then(net).catch(net);
+  navigator.serviceWorker.addEventListener('controllerchange', net);
+}
+addEventListener('online', net); addEventListener('offline', net); net();
+
+$('#q').value = store.get('lastq', 'SHIN CHARNG FA');
+run(); renderBook();
+</script>
+</body>
+</html>
