@@ -65,17 +65,13 @@ td{border-top:1px solid var(--line);padding:4px 6px}
 .nato{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
 .n{min-width:64px;padding:5px 7px;line-height:1.15;text-align:center}
 .n .l{font-size:18px;font-weight:700}.n .w{font-size:11px;letter-spacing:.5px}.n .p{font-size:12px;color:var(--mut)}
-.ph{border-top:1px solid var(--line);padding:9px 0;display:flex;gap:8px;align-items:center}
-.ph .t{flex:1;min-width:0}.ph .m{font-size:15px;font-weight:600}.ph .e{font-size:14px}.ph .z{font-size:13px;color:var(--acc)}
-.ph button{padding:6px 9px;font-size:15px}
-.cat{margin:12px 0 2px;font-size:13px;color:var(--mut);font-weight:600}
 .radio{background:var(--bg);border:1px solid var(--line);border-radius:10px;padding:8px 10px;margin-top:8px}
 .radio .e{font-size:15px}.radio .z{font-size:14px;color:var(--acc);margin-top:3px}
 </style>
 </head>
 <body>
 <header>
-  <h1>船名分析 <span style="font-size:11px;color:var(--mut)">v5</span></h1>
+  <h1>船名分析 <span style="font-size:11px;color:var(--mut)">v4</span></h1>
   <span id="net" class="pill">檢查中</span>
   <button id="nightBtn" title="夜間紅光">🌙</button>
 </header>
@@ -114,19 +110,6 @@ td{border-top:1px solid var(--line);padding:4px 6px}
       <div class="radio"><div class="e" id="radioEn"></div><div class="z" id="radioZh"></div></div>
       <div class="btns"><button id="radioBtn">🔊 念呼叫</button><button id="radioSlow">🐢 慢慢念</button></div>
     </details>
-  </div>
-
-
-  <div class="card" id="phCard">
-    <b>無線電常用句</b> <span class="muted">（點 🔊 聽，🐢 慢慢念，離線也能用）</span>
-    <div class="row" style="margin-top:8px">
-      <input id="phq" placeholder="搜尋，例如：頻道、轉向、捕魚">
-      <select id="ch" style="font:inherit;background:var(--bg);color:var(--tx);border:1px solid var(--line);border-radius:10px;padding:9px">
-        <option>06</option><option selected>08</option><option>10</option><option>12</option><option>13</option><option>67</option><option>69</option><option>72</option><option>73</option><option>77</option>
-      </select>
-    </div>
-    <div class="muted" style="margin-top:4px">右邊選的是「請換頻道」那句要講的頻道。慣例：每句話最後講 over（換你說），結束通話講 out。</div>
-    <div id="phList"></div>
   </div>
 
   <div class="card" id="syls"></div>
@@ -410,76 +393,6 @@ function renderSay(){
   $('#radioZh').textContent = `${nzh}，${nzh}，利斯伊斯 ${mzh}，${mzh}，歐佛。`;
 }
 
-
-// ---------- 無線電常用句 ----------
-const PHRASES = [
- ['開場與溝通', [
-  ['你會講中文嗎？','Do you speak Chinese? Over.','杜 優 斯比克 拆尼斯？歐佛'],
-  ['請換到工作頻道','Change to channel {CH}, over.','欽吉 吐 參諾 {CHZ}，歐佛'],
-  ['請再說一次','Say again, please.','塞 阿根，普利斯'],
-  ['請講慢一點','Please speak slowly.','普利斯 斯比克 斯洛利'],
-  ['收到，了解','Received, understood.','瑞西夫德，安德斯圖德'],
-  ['是／對','Yes.','耶斯'],
-  ['不是／不對','No.','諾'],
-  ['換你說（每句結尾）','Over.','歐佛'],
-  ['通話結束','Out.','奧特'],
- ]],
- ['會船與避讓', [
-  ['你們打算怎麼走？','What are your intentions? Over.','瓦特 阿 優爾 因坦遜斯？歐佛'],
-  ['你正朝我開過來，有碰撞危險','You are on a collision course with me.','優 阿 安 欸 克利真 寇斯 威斯 密'],
-  ['左舷對左舷通過','I will pass you port to port.','艾 威爾 帕斯 優 波特 吐 波特'],
-  ['右舷對右舷通過','I will pass you starboard to starboard.','艾 威爾 帕斯 優 斯塔伯德 吐 斯塔伯德'],
-  ['我往右轉','I am altering my course to starboard.','艾 安 歐特林 麥 寇斯 吐 斯塔伯德'],
-  ['我往左轉','I am altering my course to port.','艾 安 歐特林 麥 寇斯 吐 波特'],
-  ['我正在減速','I am reducing speed.','艾 安 瑞丟辛 斯匹德'],
-  ['我停俥','I am stopping my engine.','艾 安 斯塔平 麥 恩真'],
-  ['請保持航向航速','Please keep your course and speed.','普利斯 基普 優爾 寇斯 安 斯匹德'],
-  ['請你往右轉','Please alter your course to starboard.','普利斯 歐特 優爾 寇斯 吐 斯塔伯德'],
-  ['請避開我','Please keep clear of me.','普利斯 基普 克利爾 歐夫 密'],
- ]],
- ['捕魚與作業', [
-  ['我在捕魚','I am fishing.','艾 安 費辛'],
-  ['我的漁具在水裡','My fishing gear is in the water.','麥 費辛 吉爾 依斯 因 德 沃特'],
-  ['我行動受限，無法避讓','I am restricted in my ability to manoeuvre.','艾 安 瑞斯崔克提德 因 麥 阿比利蒂 吐 馬努佛'],
-  ['我是警戒船','I am a guard vessel.','艾 安 欸 加德 維索'],
-  ['前方有調查作業，請避開','Survey operation ahead. Please keep clear.','瑟維 歐珀瑞遜 阿黑德。普利斯 基普 克利爾'],
-  ['請與我保持一浬距離','Please keep one nautical mile away from me.','普利斯 基普 萬 諾提考 麥爾 阿威 佛朗 密'],
-  ['謝謝合作','Thank you for your cooperation.','桑球 佛 優爾 扣阿珀瑞遜'],
- ]],
- ['緊急', [
-  ['我需要協助','I need assistance.','艾 尼德 阿西斯坦斯'],
-  ['你需要協助嗎？','Do you need assistance? Over.','杜 優 尼德 阿西斯坦斯？歐佛'],
-  ['有人落水','Man overboard.','曼 歐佛波德'],
-  ['我的主機故障','I have engine failure.','艾 海夫 恩真 費留爾'],
-  ['我的船在進水','I am taking water.','艾 安 泰金 沃特'],
- ]],
-];
-function chFill(t){ const c = $('#ch').value;
-  return t.replace('{CH}', c.split('').map(d => DIGIT[d][0].toLowerCase()).join(' '))
-          .replace('{CHZ}', c.split('').map(d => DIGIT[d][1]).join(' ')); }
-function renderPhrases(){
-  const f = $('#phq').value.trim().toLowerCase(), box = $('#phList'); box.innerHTML = '';
-  let n = 0;
-  PHRASES.forEach(([cat, list]) => {
-    const rows = list.filter(r => !f || (r[0] + r[1] + r[2]).toLowerCase().includes(f));
-    if(!rows.length) return;
-    const h = document.createElement('div'); h.className = 'cat'; h.textContent = cat; box.appendChild(h);
-    rows.forEach(([m, e, z]) => {
-      const d = document.createElement('div'); d.className = 'ph'; n++;
-      d.innerHTML = '<div class="t"><div class="m"></div><div class="e"></div><div class="z"></div></div><button>🔊</button><button>🐢</button>';
-      const en = chFill(e);
-      d.querySelector('.m').textContent = m; d.querySelector('.e').textContent = en; d.querySelector('.z').textContent = chFill(z);
-      const [b1, b2] = d.querySelectorAll('button');
-      b1.onclick = () => speak(en, 0.85); b2.onclick = () => speak(en, 0.55);
-      box.appendChild(d);
-    });
-  });
-  if(!n) box.innerHTML = '<div class="muted" style="padding-top:8px">沒有符合的句子</div>';
-}
-$('#phq').oninput = renderPhrases;
-$('#ch').onchange = () => { store.set('ch', $('#ch').value); renderPhrases(); };
-$('#ch').value = store.get('ch', '08');
-
 // ---------- book ----------
 function renderBook(){
   const f = $('#bq').value.trim().toUpperCase(), box = $('#book'); box.innerHTML = '';
@@ -555,7 +468,7 @@ $('#radioSlow').onclick = () => speak(radioText($('#q').value), 0.55);
 $('#myShip').value = store.get('myship', '');
 $('#myShip').oninput = () => { store.set('myship', $('#myShip').value); renderSay(); };
 $('#q').value = store.get('lastq', 'SHIN CHARNG FA');
-run(); renderBook(); renderPhrases();
+run(); renderBook();
 </script>
 </body>
 </html>
