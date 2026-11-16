@@ -59,19 +59,11 @@ details summary{cursor:pointer;color:var(--mut);font-size:14px}
 .toast.show{opacity:1}
 table{border-collapse:collapse;font-size:13px;width:100%}
 td{border-top:1px solid var(--line);padding:4px 6px}
-.say{font-size:24px;font-weight:700;color:var(--acc);letter-spacing:1px;word-break:break-all}
-.sayen{font-size:13px;color:var(--mut);letter-spacing:1px}
-.btns{display:flex;flex-wrap:wrap;gap:6px;margin:10px 0 4px}
-.nato{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
-.n{min-width:64px;padding:5px 7px;line-height:1.15;text-align:center}
-.n .l{font-size:18px;font-weight:700}.n .w{font-size:11px;letter-spacing:.5px}.n .p{font-size:12px;color:var(--mut)}
-.radio{background:var(--bg);border:1px solid var(--line);border-radius:10px;padding:8px 10px;margin-top:8px}
-.radio .e{font-size:15px}.radio .z{font-size:14px;color:var(--acc);margin-top:3px}
 </style>
 </head>
 <body>
 <header>
-  <h1>船名分析</h1>
+  <h1>船名分析 <span style="font-size:11px;color:var(--mut)">v3</span></h1>
   <span id="net" class="pill">檢查中</span>
   <button id="nightBtn" title="夜間紅光">🌙</button>
 </header>
@@ -91,25 +83,6 @@ td{border-top:1px solid var(--line);padding:4px 6px}
       <button id="copy">複製</button>
     </div>
     <div class="muted" id="hint">點下面的字可以換；有「聲調✓」的是國語羅馬字拼法連聲調都對上，最可能。</div>
-  </div>
-
-  <div class="card">
-    <b>英文念法</b> <span class="muted">（商船、外籍船用）</span>
-    <div class="say" id="sayZh" style="margin-top:6px"></div>
-    <div class="sayen" id="sayEn"></div>
-    <div class="btns">
-      <button class="pri" id="sayBtn">🔊 念船名</button>
-      <button id="saySlow">🐢 慢慢念</button>
-      <button id="spellBtn">🔤 念字母拼法</button>
-    </div>
-    <div class="muted">中文是近似音，只供參考，以語音為準。對方聽不懂時改用字母拼法，點字母可單獨聽：</div>
-    <div class="nato" id="nato"></div>
-    <details style="margin-top:10px" id="radioBox">
-      <summary>無線電呼叫範例</summary>
-      <div style="margin-top:8px"><label class="muted">我的船名（英文，會記住）</label><input id="myShip" autocapitalize="characters" spellcheck="false" placeholder="例：SHIN CHARNG FA"></div>
-      <div class="radio"><div class="e" id="radioEn"></div><div class="z" id="radioZh"></div></div>
-      <div class="btns"><button id="radioBtn">🔊 念呼叫</button><button id="radioSlow">🐢 慢慢念</button></div>
-    </details>
   </div>
 
   <div class="card" id="syls"></div>
@@ -158,7 +131,7 @@ td{border-top:1px solid var(--line);padding:4px 6px}
 <script>
 const $ = s => document.querySelector(s);
 const KIND = {GR:'國羅',GR0:'國羅(無調)',WG:'威妥瑪',TY:'通用',PY:'漢拼'};
-const EXAMPLES = ['SHIN CHARNG FA','JIN SHUENN FA NO.168','HORNG YEONG SHYANG','FWU YIH MAAN','HSIN HSIANG FA NO.12','CAPE FELTON','EVER GIVEN'];
+const EXAMPLES = ['SHIN CHARNG FA','JIN SHUENN FA NO.168','HORNG YEONG SHYANG','FWU YIH MAAN','HSIN HSIANG FA NO.12'];
 let state = {tokens:[], picks:[], num:''};
 
 // ---------- storage (wrapped: iOS private mode can throw) ----------
@@ -215,7 +188,7 @@ function run(){
   const {toks, num} = parse(q);
   state.tokens = toks; state.num = num;
   state.picks = toks.map(t => { const c = cands(t); return c.length ? c[0].z : '?'; });
-  renderSyls(); compose(); renderSay();
+  renderSyls(); compose();
 }
 function renderSyls(){
   const box = $('#syls'); box.innerHTML = '';
@@ -252,145 +225,6 @@ function compose(){
   $('#fZh').value = hit ? hit.zh : zh;
   $('#fEn').value = normalize($('#q').value);
   if(hit){ $('#fCs').value = hit.cs || ''; $('#fMmsi').value = hit.mmsi || ''; $('#fNote').value = hit.note || ''; }
-}
-
-// ---------- 英文念法 ----------
-const SAY_WORDS = {CAPE:'凱普',STAR:'斯塔',SEA:'西',OCEAN:'歐遜',PACIFIC:'帕西菲克',ATLANTIC:'亞特蘭提克',GLORY:'格洛瑞',EVER:'艾佛',
- MAERSK:'麥斯克',EXPRESS:'伊克斯普瑞斯',PRINCESS:'普林賽斯',QUEEN:'昆恩',KING:'金',HARMONY:'哈默尼',PIONEER:'派奧尼爾',SPIRIT:'斯皮瑞特',
- VICTORY:'維克托瑞',FORTUNE:'佛丘恩',LUCKY:'拉奇',GOLDEN:'戈登',GOLD:'勾德',SILVER:'西爾佛',ORIENT:'歐瑞恩特',PEARL:'珀爾',DIAMOND:'戴蒙德',
- CROWN:'克朗',ROYAL:'羅亞爾',GLOBAL:'格洛博',WORLD:'沃爾德',TRADER:'崔德爾',CARRIER:'凱瑞爾',LEADER:'利德爾',NAVIGATOR:'納維蓋特',
- VOYAGER:'沃耶傑',BRIDGE:'布瑞吉',BAY:'貝',ISLAND:'艾蘭德',HARBOUR:'哈伯',HARBOR:'哈伯',PORT:'波特',NORTH:'諾斯',SOUTH:'紹斯',
- EAST:'伊斯特',WEST:'威斯特',SUN:'桑',SUNRISE:'桑萊斯',MOON:'慕恩',SKY:'斯凱',BLUE:'布魯',GREEN:'格林',WHITE:'懷特',BLACK:'布萊克',
- RED:'瑞德',GRACE:'格雷斯',HOPE:'霍普',PROSPERITY:'普羅斯佩瑞蒂',UNITY:'尤尼蒂',PEACE:'皮斯',FRIENDSHIP:'佛蘭德希普',EAGLE:'伊格爾',
- PHOENIX:'菲尼克斯',DRAGON:'德拉根',TIGER:'泰格',LION:'萊恩',DOLPHIN:'多爾芬',ENERGY:'艾納吉',ENTERPRISE:'恩特普萊斯',CHAMPION:'錢皮恩',
- COSCO:'科斯科',EVERGREEN:'艾佛格林',JAPAN:'賈潘',MARU:'馬魯',CHINA:'柴娜',KOREA:'科瑞亞',SINGAPORE:'辛加波',LINE:'萊恩',
- SHIPPING:'希平',NAVIGATION:'納維蓋遜',TANKER:'坦克爾',BULK:'巴爾克',CONTAINER:'康泰納',GAS:'蓋斯',ACE:'艾斯',ALPHA:'阿爾法',
- NEW:'紐',GRAND:'格蘭德',GREAT:'格瑞特',MARINE:'馬林',MARITIME:'馬瑞泰姆',SEVEN:'塞文',OF:'歐夫',THE:'德',AND:'安德',POINT:'波因特',
- HAWK:'霍克',FALCON:'佛爾康',ARROW:'艾羅',WIND:'溫德',WAVE:'威夫',FLOWER:'佛勞爾',ROSE:'羅斯',LADY:'雷蒂',HERO:'希羅',BRAVE:'布雷夫',
- ONE:'萬',TWO:'吐',THREE:'思瑞',FOUR:'佛',FIVE:'法夫',SIX:'西克斯',EIGHT:'欸特',NINE:'奈恩',TEN:'滕',
- PRIDE:'普萊德',DREAM:'德瑞姆',HORIZON:'霍萊森',VISION:'維琴',LIBERTY:'利伯蒂',FREEDOM:'佛利德姆',VENTURE:'凡丘爾',SUCCESS:'薩克塞斯',
- WISDOM:'威斯頓',TRUST:'崔斯特',SPRING:'斯普林',SUMMER:'薩默',WINTER:'溫特',AUTUMN:'歐騰',RIVER:'瑞佛',LAKE:'雷克',COAST:'寇斯特',
- PRINCE:'普林斯',EMPEROR:'艾姆珀羅',EMPRESS:'艾姆普瑞斯',NAVIGATOR:'納維蓋特',FORTUNA:'佛圖納',LUNA:'露娜',SOL:'索爾',MAR:'馬爾',
- MSC:'艾姆 艾斯 西',YM:'外 艾姆',OOCL:'歐 歐 西 艾爾',CMA:'西 艾姆 欸',CGM:'西 吉 艾姆',NYK:'恩 外 凱',HMM:'艾曲 艾姆 艾姆',
- HYUNDAI:'軒戴',NO:'南伯'};
-const SAY_TAB = { // a e i o u | an en in on un | 長音 ei ee ai ou oo
- '':['阿艾伊奧烏','安恩因昂溫','艾伊艾歐烏'],B:['巴貝比博布','班本賓邦本','貝比拜波布'],P:['帕佩皮波普','潘彭平龐潘','佩皮派坡普'],
- M:['馬梅米莫穆','曼門敏蒙曼','梅米麥莫穆'],F:['法費菲福富','凡芬芬豐豐','費菲法佛富'],V:['瓦維維沃武','萬文文旺文','維維瓦沃武'],
- D:['達德迪多杜','丹登丁東敦','戴迪戴多杜'],T:['塔特蒂托圖','坦滕廷頓屯','泰蒂泰托圖'],N:['納內尼諾努','南嫩寧農農','內尼奈諾努'],
- L:['拉萊利洛盧','蘭倫林隆倫','雷利萊洛盧'],R:['拉瑞里羅魯','蘭倫林朗倫','雷瑞萊羅魯'],G:['加格吉戈古','甘根金岡貢','蓋吉蓋戈古'],
- K:['卡克基科庫','坎肯金康昆','凱基凱科庫'],H:['哈赫希霍胡','漢亨欣洪洪','海希海霍胡'],J:['賈傑吉喬朱','簡珍金瓊君','傑吉賈喬朱'],
- CH:['查切奇喬丘','錢琴欽瓊春','切奇柴喬丘'],SH:['沙謝希肖舒','尚申欣尚順','謝希夏肖舒'],S:['薩塞西索蘇','桑森辛松森','塞西賽索蘇'],
- Z:['扎澤齊佐祖','贊曾津宗尊','澤齊扎佐祖'],W:['瓦威威沃伍','萬溫溫旺溫','威威懷沃伍'],Y:['亞耶伊約尤','楊延尹永雲','耶伊亞約尤'],
- KW:['夸奎奎闊庫','寬昆昆匡昆','奎奎夸闊庫']};
-const SAY_ALIAS = {C:'K',CK:'K',Q:'K',PH:'F',WH:'W',TH:'S',X:'S',TCH:'CH',SCH:'SH',QU:'KW'};
-const SAY_LONE = {S:'斯',T:'特',D:'德',K:'克',C:'克',CK:'克',Q:'克',P:'普',B:'布',G:'格',F:'夫',V:'夫',PH:'夫',M:'姆',N:'恩',NG:'恩',
- L:'爾',R:'爾',X:'克斯',Z:'茲',CH:'奇',TCH:'奇',SH:'許',SCH:'許',TH:'斯',J:'吉',QU:'克',H:'',W:'',WH:'',Y:'',GH:''};
-const VI = {A:0,E:1,I:2,O:3,U:4,Y:2};
-function sayWord(word){
-  if(SAY_WORDS[word]) return SAY_WORDS[word];
-  if(/^\d+$/.test(word)) return word.split('').map(d => DIGIT[d][1]).join(' ');
-  if(!/[AEIOUY]/.test(word)) return word.split('').map(c => LETTER_ZH[c] || '').join(' ');
-  let w = word.replace(/([B-DF-HJ-NP-TV-Z])\1/g, '$1');
-  const magic = w.length > 3 && /[^AEIOUY]E$/.test(w) && /[AEIOUY]/.test(w.slice(0, -2));
-  if(magic) w = w.slice(0, -1);
-  const DI = ['TCH','SCH','CK','CH','SH','TH','PH','QU','NG','WH','GH'], u = [];
-  for(let i = 0; i < w.length;){ const d = DI.find(x => w.startsWith(x, i)) || w[i]; u.push(d); i += d.length; }
-  const isV = (k) => { const x = u[k];
-    if('AEIOU'.includes(x)) return true;
-    if(x === 'Y') return !(k === 0 && u[1] && 'AEIOU'.includes(u[1]));
-    if(x === 'W' || x === 'GH') return k > 0 && isV(k-1);
-    return false; };
-  // groups: [onset[], vowel string, coda[]]
-  const syl = []; let k = 0, on = [];
-  while(k < u.length && !isV(k)) on.push(u[k++]);
-  if(k >= u.length) return word;
-  while(k < u.length){
-    let v = ''; while(k < u.length && isV(k)) v += u[k++];
-    const cl = []; while(k < u.length && !isV(k)) cl.push(u[k++]);
-    let coda, next;
-    if(k >= u.length){ coda = cl; next = []; }
-    else if(cl.length === 1 && cl[0] === 'NG'){ coda = ['N']; next = ['G']; }
-    else if(cl.length <= 1){ coda = []; next = cl; }
-    else { coda = [cl[0]]; next = cl.slice(1); }
-    syl.push({on, v, coda}); on = next;
-  }
-  const out = [];
-  syl.forEach((s, si) => {
-    let on = s.on.slice();
-    while(on.length > 1) out.push(SAY_LONE[on.shift()] || '');
-    let o = on[0] || '';
-    if(o === 'C' && /^[EIY]/.test(s.v)) o = 'S';
-    if(o === 'G' && /^E/.test(s.v) && si > 0) o = 'J';
-    o = SAY_ALIAS[o] || o; if(!SAY_TAB[o]) o = '';
-    const row = SAY_TAB[o];
-    let v = s.v.replace(/GH/, ''), cls, idx, extra = '';
-    if(/^(AI|AY|EI|EY)$/.test(v)){ cls = 2; idx = 0; }
-    else if(/^(EE|EA|IE)$/.test(v)){ cls = 2; idx = 1; }
-    else if(s.v === 'IGH'){ cls = 2; idx = 2; }
-    else if(/^(OA|OW|OE)$/.test(v)){ cls = 2; idx = 3; }
-    else if(/^(OO|EW|UE|UI|OU)$/.test(v)){ cls = 2; idx = 4; }
-    else if(/^(AU|AW)$/.test(v)){ cls = 0; idx = 3; }
-    else if(/^(OI|OY)$/.test(v)){ cls = 0; idx = 3; extra = '伊'; }
-    else { cls = 0; idx = VI[v[0]] ?? 0;
-      for(const ch of v.slice(1)) if(VI[ch] !== undefined) extra += SAY_TAB[''][0][VI[ch]]; }
-    if(magic && si === syl.length - 1 && v.length === 1){ cls = 2; idx = VI[v]; }
-    let coda = s.coda.slice();
-    if(coda[0] === 'N' || coda[0] === 'NG'){
-      if(cls === 2){ out.push(row[2][idx] + extra + '恩'); }
-      else { const ni = coda[0] === 'NG' ? (idx <= 1 || idx === 3 ? 3 : 2) : idx; out.push(row[1][ni] + extra); }
-      coda.shift();
-    } else out.push(row[cls][idx] + extra);
-    coda.forEach(c => out.push(SAY_LONE[c] ?? ''));
-  });
-  return out.join('');
-}
-const NATO = {A:['ALFA','阿爾法'],B:['BRAVO','布拉沃'],C:['CHARLIE','恰理'],D:['DELTA','德爾塔'],E:['ECHO','艾扣'],F:['FOXTROT','佛克斯特羅特'],
- G:['GOLF','高夫'],H:['HOTEL','侯泰爾'],I:['INDIA','印地亞'],J:['JULIETT','朱麗葉'],K:['KILO','基洛'],L:['LIMA','利馬'],M:['MIKE','麥克'],
- N:['NOVEMBER','諾汶伯'],O:['OSCAR','奧斯卡'],P:['PAPA','帕帕'],Q:['QUEBEC','奎北克'],R:['ROMEO','羅密歐'],S:['SIERRA','西艾拉'],
- T:['TANGO','坦戈'],U:['UNIFORM','尤尼佛姆'],V:['VICTOR','維克特'],W:['WHISKEY','威士忌'],X:['X-RAY','艾克斯瑞'],Y:['YANKEE','揚基'],Z:['ZULU','祖魯']};
-const DIGIT = {0:['ZERO','吉羅'],1:['ONE','萬'],2:['TWO','吐'],3:['THREE','吹'],4:['FOUR','佛爾'],5:['FIVE','費夫'],
- 6:['SIX','西克斯'],7:['SEVEN','塞文'],8:['EIGHT','欸特'],9:['NINER','奈拿']};
-const LETTER_ZH = {A:'欸',B:'比',C:'西',D:'迪',E:'伊',F:'艾夫',G:'吉',H:'艾曲',I:'艾',J:'傑',K:'凱',L:'艾爾',M:'艾姆',N:'恩',O:'歐',P:'皮',
- Q:'Q',R:'阿爾',S:'艾斯',T:'提',U:'尤',V:'維',W:'達布流',X:'艾克斯',Y:'外',Z:'利'};
-function sayWords(q){ // -> [{w, zh, en}]
-  const s = normalize(q).replace(/\bNO\.?\s*(?=\d)/g, 'NO ').replace(/([A-Z])(\d)/g, '$1 $2').replace(/(\d)([A-Z])/g, '$1 $2');
-  return s.split(/[^A-Z0-9]+/).filter(Boolean).map((w, i, a) => {
-    if(w === 'NO' && a[i+1] && /^\d/.test(a[i+1])) return {w, zh:'南伯', en:'number'};
-    if(/^\d+$/.test(w)) return {w, zh:w.split('').map(d => DIGIT[d][1]).join(' '), en:w.split('').join(' ')};
-    return {w, zh:sayWord(w), en:w.toLowerCase()};
-  });
-}
-// speech (iPhone voices are on-device: works offline)
-let enVoice = null;
-function pickVoice(){ const vs = speechSynthesis.getVoices().filter(v => /^en[-_]/i.test(v.lang));
-  enVoice = vs.find(v => /en[-_]US/i.test(v.lang) && v.localService) || vs.find(v => /en[-_]US/i.test(v.lang)) || vs[0] || null; }
-if('speechSynthesis' in window){ pickVoice(); speechSynthesis.onvoiceschanged = pickVoice; }
-function speak(text, rate = 0.85){
-  if(!('speechSynthesis' in window)){ toast('這支手機不支援語音朗讀'); return; }
-  speechSynthesis.cancel();
-  const u = new SpeechSynthesisUtterance(text); u.lang = 'en-US'; u.rate = rate; if(enVoice) u.voice = enVoice;
-  speechSynthesis.speak(u);
-}
-function spellText(q){ return normalize(q).replace(/[^A-Z0-9]/g, '').split('').map(c => NATO[c] ? NATO[c][0] : DIGIT[c][0]).join(', '); }
-function nameSpeech(q){ return sayWords(q).map(x => x.en).join(' '); }
-function radioText(q){ const my = $('#myShip').value.trim();
-  const n = nameSpeech(q), m = my ? nameSpeech(my) : '';
-  return `${n}, ${n}, this is ${m || '...'}, ${m || '...'}, over.`; }
-function renderSay(){
-  const q = $('#q').value, ws = sayWords(q), box = $('#nato');
-  $('#sayZh').textContent = ws.map(x => x.zh).join('・');
-  $('#sayEn').textContent = ws.map(x => x.w).join(' ');
-  box.innerHTML = '';
-  normalize(q).replace(/[^A-Z0-9]/g, '').split('').forEach(c => {
-    const t = NATO[c] || DIGIT[c]; if(!t) return;
-    const b = document.createElement('button'); b.className = 'n';
-    b.innerHTML = `<div class="l"></div><div class="w"></div><div class="p"></div>`;
-    b.querySelector('.l').textContent = c; b.querySelector('.w').textContent = t[0]; b.querySelector('.p').textContent = t[1];
-    b.onclick = () => speak(t[0], 0.8); box.appendChild(b);
-  });
-  const my = $('#myShip').value.trim(), nzh = ws.map(x => x.zh).join('・'), mzh = my ? sayWords(my).map(x => x.zh).join('・') : '（你的船名）';
-  $('#radioEn').textContent = radioText(q);
-  $('#radioZh').textContent = `${nzh}，${nzh}，利斯伊斯 ${mzh}，${mzh}，歐佛。`;
 }
 
 // ---------- book ----------
@@ -455,17 +289,11 @@ function net(){ const n = $('#net');
   else { n.textContent = navigator.onLine ? '連線中' : '離線'; n.classList.remove('on'); } }
 if('serviceWorker' in navigator){
   navigator.serviceWorker.register('sw.js').then(() => navigator.serviceWorker.ready).then(net).catch(net);
-  navigator.serviceWorker.addEventListener('controllerchange', net);
+  let hadCtl = !!navigator.serviceWorker.controller;
+  navigator.serviceWorker.addEventListener('controllerchange', () => { net(); if (hadCtl) location.reload(); hadCtl = true; });
 }
 addEventListener('online', net); addEventListener('offline', net); net();
 
-$('#sayBtn').onclick = () => speak(nameSpeech($('#q').value));
-$('#saySlow').onclick = () => speak(nameSpeech($('#q').value), 0.55);
-$('#spellBtn').onclick = () => speak(spellText($('#q').value), 0.8);
-$('#radioBtn').onclick = () => speak(radioText($('#q').value));
-$('#radioSlow').onclick = () => speak(radioText($('#q').value), 0.55);
-$('#myShip').value = store.get('myship', '');
-$('#myShip').oninput = () => { store.set('myship', $('#myShip').value); renderSay(); };
 $('#q').value = store.get('lastq', 'SHIN CHARNG FA');
 run(); renderBook();
 </script>
